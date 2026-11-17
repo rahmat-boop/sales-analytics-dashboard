@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Penjualan 2024</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
+  <!-- Custom styles -->
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Tailwind custom config -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50:  '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              900: '#1e3a5f',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+
+<body class="bg-slate-50 text-slate-800 min-h-screen font-sans">
+
+  <!-- ===== HEADER ===== -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+    <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <!-- Logo icon -->
+        <div class="w-9 h-9 rounded-lg bg-brand-600 flex items-center justify-center shrink-0">
+          <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2 7m12-7l2 7m-2-7H7m6 7a1 1 0 100-2 1 1 0 000 2zm-6 0a1 1 0 100-2 1 1 0 000 2z" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold text-slate-900 leading-tight">Dashboard Penjualan</h1>
+          <p class="text-xs text-slate-500">Periode Januari – Desember 2024</p>
+        </div>
+      </div>
+      <!-- Last updated badge -->
+      <span id="lastUpdated" class="text-xs text-slate-400 bg-slate-100 px-3 py-1.5 rounded-full whitespace-nowrap">
+        Memuat data…
+      </span>
+    </div>
+  </header>
+
+  <main class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- ===== FILTER PANEL ===== -->
+    <section aria-label="Filter">
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+        <div class="flex items-center gap-2 mb-4">
+          <svg class="w-4 h-4 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 010 2H4a1 1 0 01-1-1zM6 10h12M9 16h6" />
+          </svg>
+          <h2 class="text-sm font-semibold text-slate-700">Filter Data</h2>
+          <button id="btnResetFilter"
+            class="ml-auto text-xs text-brand-600 hover:text-brand-700 font-medium transition-colors hover:underline">
+            Reset Filter
+          </button>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <!-- Region -->
+          <div>
+            <label for="filterRegion" class="block text-xs font-medium text-slate-600 mb-1.5">Region</label>
+            <select id="filterRegion" class="filter-select w-full text-sm bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all cursor-pointer">
+              <option value="">Semua Region</option>
+            </select>
+          </div>
+          <!-- Product Category -->
+          <div>
+            <label for="filterCategory" class="block text-xs font-medium text-slate-600 mb-1.5">Kategori Produk</label>
+            <select id="filterCategory" class="filter-select w-full text-sm bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all cursor-pointer">
+              <option value="">Semua Kategori</option>
+            </select>
+          </div>
+          <!-- Customer Type -->
+          <div>
+            <label for="filterCustomer" class="block text-xs font-medium text-slate-600 mb-1.5">Tipe Pelanggan</label>
+            <select id="filterCustomer" class="filter-select w-full text-sm bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all cursor-pointer">
+              <option value="">Semua Tipe</option>
+            </select>
+          </div>
+          <!-- Sales Channel -->
+          <div>
+            <label for="filterChannel" class="block text-xs font-medium text-slate-600 mb-1.5">Sales Channel</label>
+            <select id="filterChannel" class="filter-select w-full text-sm bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all cursor-pointer">
+              <option value="">Semua Channel</option>
+            </select>
+          </div>
+        </div>
+        <!-- Active filter badges -->
+        <div id="activeBadges" class="flex flex-wrap gap-2 mt-3 hidden"></div>
+      </div>
+    </section>
+
+    <!-- ===== KPI CARDS ===== -->
+    <section aria-label="KPI">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+
+        <!-- Total Revenue -->
+        <article class="kpi-card bg-white rounded-2xl border border-slate-200 shadow-sm p-5 hover:shadow-md transition-shadow">
+          <div class="flex items-start justify-between mb-3">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Total Revenue</p>
+            <span class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+              <svg class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </span>
+          </div>
+          <p id="kpiRevenue" class="text-2xl font-bold text-slate-900 leading-none mb-1">–</p>
+          <p id="kpiRevenueCount" class="text-xs text-slate-400">dari <span id="kpiTxCount">–</span> transaksi</p>
+        </article>
+
+        <!-- Total Transactions -->
+        <article class="kpi-card bg-white rounded-2xl border border-slate-200 shadow-sm p-5 hover:shadow-md transition-shadow">
+          <div class="flex items-start justify-between mb-3">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Total Transaksi</p>
+            <span class="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center">
+              <svg class="w-4 h-4 text-violet-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+            </span>
+          </div>
+          <p id="kpiTransactions" class="text-2xl font-bold text-slate-900 leading-none mb-1">–</p>
+          <p class="text-xs text-slate-400">order tercatat</p>
+        </article>
+
+        <!-- Total Quantity -->
+        <article class="kpi-card bg-white rounded-2xl border border-slate-200 shadow-sm p-5 hover:shadow-md transition-shadow">
+          <div class="flex items-start justify-between mb-3">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Total Qty Terjual</p>
+            <span class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
+              <svg class="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+            </span>
+          </div>
+          <p id="kpiQuantity" class="text-2xl font-bold text-slate-900 leading-none mb-1">–</p>
+          <p class="text-xs text-slate-400">unit produk</p>
+        </article>
+
+        <!-- Avg Discount -->
+        <article class="kpi-card bg-white rounded-2xl border border-slate-200 shadow-sm p-5 hover:shadow-md transition-shadow">
+          <div class="flex items-start justify-between mb-3">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Rata-rata Diskon</p>
+            <span class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
+              <svg class="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M17 17h.01M7 17L17 7M5 3h4l2 2 2-2h4a2 2 0 012 2v4l-2 2 2 2v4a2 2 0 01-2 2h-4l-2-2-2 2H5a2 2 0 01-2-2v-4l2-2-2-2V5a2 2 0 012-2z" />
+              </svg>
+            </span>
+          </div>
+          <p id="kpiDiscount" class="text-2xl font-bold text-slate-900 leading-none mb-1">–</p>
+          <p class="text-xs text-slate-400">per transaksi</p>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- ===== ROW 1: SALES TREND + REVENUE PER REGION ===== -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div class="lg:col-span-2 chart-card bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+        <h3 class="chart-title text-sm font-semibold text-slate-700 mb-4">📈 Sales Trend (Bulanan)</h3>
+        <div class="chart-container-lg">
+          <canvas id="chartSalesTrend"></canvas>
+        </div>
+      </div>
+      <div class="chart-card bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+        <h3 class="chart-title text-sm font-semibold text-slate-700 mb-4">🌐 Revenue per Region</h3>
+        <div class="chart-container-md">
+          <canvas id="chartRegion"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== ROW 2: REVENUE PER CATEGORY + SALES PER REP ===== -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div class="chart-card bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+        <h3 class="chart-title text-sm font-semibold text-slate-700 mb-4">🏷️ Revenue per Kategori Produk</h3>
+        <div class="chart-container-md">
+          <canvas id="chartCategory"></canvas>
+        </div>
+      </div>
+      <div class="chart-card bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+        <h3 class="chart-title text-sm font-semibold text-slate-700 mb-4">👤 Sales per Sales Representative</h3>
+        <div class="chart-container-md">
+          <canvas id="chartSalesRep"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== ROW 3: CUSTOMER TYPE + PAYMENT METHOD + SALES CHANNEL ===== -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="chart-card bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+        <h3 class="chart-title text-sm font-semibold text-slate-700 mb-4">👥 Distribusi Tipe Pelanggan</h3>
+        <div class="chart-container-sm">
+          <canvas id="chartCustomerType"></canvas>
+        </div>
+      </div>
+      <div class="chart-card bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+        <h3 class="chart-title text-sm font-semibold text-slate-700 mb-4">💳 Metode Pembayaran</h3>
+        <div class="chart-container-sm">
+          <canvas id="chartPayment"></canvas>
+        </div>
+      </div>
+      <div class="chart-card bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+        <h3 class="chart-title text-sm font-semibold text-slate-700 mb-4">📡 Sales Channel</h3>
+        <div class="chart-container-sm">
+          <canvas id="chartChannel"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== ROW 4: SCATTER + TOP 10 + QTY PER CATEGORY ===== -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div class="chart-card bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+        <h3 class="chart-title text-sm font-semibold text-slate-700 mb-4">🔵 Diskon vs Penjualan</h3>
+        <div class="chart-container-md">
+          <canvas id="chartScatter"></canvas>
+        </div>
+      </div>
+      <div class="chart-card bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+        <h3 class="chart-title text-sm font-semibold text-slate-700 mb-4">🏆 Top 10 Penjualan Tertinggi</h3>
+        <div class="chart-container-md">
+          <canvas id="chartTop10"></canvas>
+        </div>
+      </div>
+      <div class="chart-card bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+        <h3 class="chart-title text-sm font-semibold text-slate-700 mb-4">📦 Qty Terjual per Kategori</h3>
+        <div class="chart-container-md">
+          <canvas id="chartQtyCategory"></canvas>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="mt-10 pb-8 text-center text-xs text-slate-400">
+    <p>Dashboard Penjualan 2024 &mdash; Data diambil dari <code class="font-mono bg-slate-100 px-1 rounded">sales_data.json</code></p>
+  </footer>
+
+  <!-- Main script -->
+  <script src="script.js"></script>
+</body>
+</html>
